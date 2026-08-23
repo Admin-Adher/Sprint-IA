@@ -4,7 +4,7 @@
 
 - Defi donne par l'organisateur : [A COLLER LE JOUR J]
 - Fenetre de build : 120 minutes
-- Equipe : Adrien / Codex + binome / Cursor
+- Equipe : Adrien / Codex (front, UI, integration) + Mathis / Cursor (backend, IA)
 
 ## 1. Produit en une phrase
 
@@ -43,7 +43,8 @@ devient [RESULTAT VISIBLE].
 
 [TYPE TYPESCRIPT OU EXEMPLE JSON A FIGER AVANT T+10]
 
-Proprietaire du contrat : Adrien / integrateur.
+Proprietaire du contrat : Mathis / backend. Adrien valide le contrat avant son
+gel et reste l'integrateur de `main`.
 
 ## 6. Demo, criteres et fallback
 

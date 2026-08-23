@@ -21,10 +21,16 @@ pnpm verify
 
 ## Jour J
 
-1. Coller le defi dans `BRIEF.md` et le faire valider en moins de 10 minutes.
-2. Figer le contrat dans `src/types/sprint.ts` et transmettre la fixture au flux UI.
-3. Travailler sur `adrien/core-ai` et `binome/ui-demo`; seul l'integrateur publie `main`.
-4. Integrer avant T+50, geler a T+110 et repeter deux fois la demo de 90 secondes.
+Ouvrir les guides dans cet ordre :
+
+1. Les deux : [`00_DEPART_COMMUN.md`](00_DEPART_COMMUN.md).
+2. Adrien : [`01_ADRIEN_CODEX_FRONT.md`](01_ADRIEN_CODEX_FRONT.md).
+3. Mathis : [`02_MATHIS_CURSOR_BACKEND.md`](02_MATHIS_CURSOR_BACKEND.md).
+4. Adrien, pour les fusions et la fin :
+   [`03_INTEGRATION_ET_DEMO_ADRIEN.md`](03_INTEGRATION_ET_DEMO_ADRIEN.md).
+
+Branches du sprint : `adrien/ui-demo` et `mathis/core-ai`. Seul Adrien integre
+et publie `main`.
 
 La route `POST /api/generate` est un fallback structure temporaire. Remplacer
 son contenu par l'appel IA serveur du defi, en conservant timeout, validation et
