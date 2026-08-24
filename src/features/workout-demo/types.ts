@@ -30,3 +30,11 @@ export type FlatPhase = WorkoutPhase & {
   round: number;
   rounds: number;
 };
+
+export type CompletedSession = {
+  id: string;
+  completedAt: number;
+  actualDurationSeconds: number;
+  phasesCompleted: number;
+  plan: WorkoutPlan;
+};
