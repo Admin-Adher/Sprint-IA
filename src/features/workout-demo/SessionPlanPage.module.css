@@ -362,8 +362,33 @@
   }
 
   .launch {
-    position: static;
-    order: -1;
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    order: 0;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .launch > span,
+  .launch > strong,
+  .launch p {
+    display: none;
+  }
+
+  .launchButton {
+    margin-top: 0;
+  }
+
+  .launch small {
+    margin-top: 8px;
+  }
+
+  .page {
+    padding-bottom: 128px;
   }
 
   .phase {
