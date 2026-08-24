@@ -8,7 +8,7 @@ import type { WorkoutPlan } from "@/features/workout-demo/types";
 import styles from "./page.module.css";
 
 type Screen = "landing" | "catalog" | "composer" | "sessions" | "preview" | "player" | "complete";
-type GenerationState = "idle" | "loading" | "fallback";
+type GenerationState = "idle" | "loading" | "success" | "error" | "fallback";
 type PlayerState = "ready" | "countdown" | "running" | "paused";
 
 const START_COUNTDOWN_SECONDS = 5;
@@ -17,6 +17,9 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>("catalog");
   const [plan, setPlan] = useState<WorkoutPlan>(demoGeneratedPlan);
   const [generation, setGeneration] = useState<GenerationState>("idle");
+  const [goal, setGoal] = useState("10 minutes, débutant, sans saut");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [voiceAvailable, setVoiceAvailable] = useState(true);
   const [playerState, setPlayerState] = useState<PlayerState>("ready");
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [remaining, setRemaining] = useState(START_COUNTDOWN_SECONDS);
@@ -86,6 +89,12 @@ export default function Home() {
   }, [finishSession, phaseIndex, phases.length, playerState, startPhase]);
 
   const generatePlan = (fallback = false) => {
+    if (!fallback && !goal.trim()) {
+      setGeneration("error");
+      setFormError("Décris au moins la durée, le niveau ou une contrainte pour composer la séance.");
+      return;
+    }
+    setFormError(null);
     setGeneration("loading");
     window.setTimeout(() => {
       setPlan({
@@ -94,12 +103,13 @@ export default function Home() {
           ? "Exemple de secours - IA indisponible. Le parcours reste lançable."
           : "Mode démonstration local - API de génération à connecter.",
       });
-      setGeneration(fallback ? "fallback" : "idle");
+      setGeneration(fallback ? "fallback" : "success");
       setScreen("preview");
     }, 680);
   };
 
   const startSession = () => {
+    setVoiceAvailable("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance !== "undefined");
     setPhaseIndex(0);
     setCompleted(0);
     setActualDuration(0);
@@ -140,6 +150,8 @@ export default function Home() {
     setPlayerState("ready");
     setPlan(demoGeneratedPlan);
     setGeneration("idle");
+    setGoal("10 minutes, débutant, sans saut");
+    setFormError(null);
     setScreen("catalog");
   };
 
@@ -175,7 +187,7 @@ export default function Home() {
 
   if (screen === "preview") return <main className={styles.appShell}>
     <header className={styles.topBar}><button className={styles.brandButton} onClick={reset} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.resetButton} onClick={reset} type="button">Réinitialiser la démo</button></header>
-    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Catalogue</button><p className={styles.eyebrow}>PLAN DE DÉMONSTRATION</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.fixtureNotice}>{plan.fallbackNotice}</p>}</div><aside className={styles.launchPanel}><span>PRÊT À COACHER</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes. La voix annoncera chaque phase.</p><button className={styles.primaryButton} onClick={startSession} type="button">Lancer les mains libres</button><small>La voix accompagne le chrono, elle ne le pilote jamais.</small></aside></section>
+    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Catalogue</button><p className={styles.eyebrow}>PLAN DE DÉMONSTRATION</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Séance structurée prête à lancer — mode démo local."}</p>}</div><aside className={styles.launchPanel}><span>PRÊT À COACHER</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes. La voix annoncera chaque phase.</p><button className={styles.primaryButton} onClick={startSession} type="button">Lancer les mains libres</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix accompagne le chrono, elle ne le pilote jamais."}</small></aside></section>
     <section className={styles.structureSection}><div className={styles.sectionHeading}><span>STRUCTURE COMPLÈTE</span><p>La durée est calculée depuis les phases.</p></div>{plan.blocks.map((block) => <article className={styles.blockCard} key={block.id}><header><strong>{block.label}</strong><span>{block.rounds} {block.rounds > 1 ? "tours" : "tour"}</span></header>{block.phases.map((item) => <div className={styles.phaseRow} key={item.id}><span className={styles[item.kind]}>{item.kind === "work" ? "Effort" : item.kind === "rest" ? "Repos" : item.kind === "warmup" ? "Échauffement" : "Retour"}</span><strong>{item.exercise}</strong><em>{formatDuration(item.durationSeconds)}</em></div>)}</article>)}</section>
   </main>;
 
@@ -198,7 +210,7 @@ export default function Home() {
 
   if (screen === "composer") return <main className={styles.workspacePage}>
     <header className={styles.workspaceHeader}><button className={styles.dashboardBrand} onClick={() => setScreen("catalog")} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Aujourd&apos;hui</button></header>
-    <section className={styles.workspaceContent}><p className={styles.eyebrow}>COMPOSER AVEC L&apos;IA</p><h1>Une contrainte suffit.</h1><p className={styles.workspaceLead}>Décris le contexte : la séance sera structurée et lisible avant le départ.</p><div className={styles.composerWorkspace}><label>Objectif<textarea defaultValue="10 minutes, débutant, sans saut" rows={4} /></label><div className={styles.quickChips}><button type="button">10 min</button><button type="button">Débutant</button><button type="button">Sans saut</button></div><button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Composition…" : "Composer la séance"}</button><button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Tester le fallback de démo</button></div></section>
+    <section className={styles.workspaceContent}><p className={styles.eyebrow}>COMPOSER AVEC L&apos;IA</p><h1>Une contrainte suffit.</h1><p className={styles.workspaceLead}>Décris le contexte : la séance sera structurée et lisible avant le départ.</p><div className={styles.composerWorkspace}><label htmlFor="workout-goal">Objectif<textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. 10 min, débutant, sans saut" rows={4} value={goal} /></label><p className={styles.fieldHint} id="goal-help">Durée, niveau et contrainte : une phrase suffit.</p><div className={styles.quickChips}><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">10 min</button><button onClick={() => setGoal("10 minutes, débutant")} type="button">Débutant</button><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">Sans saut</button></div>{!goal.trim() && !formError && <p className={styles.emptyNotice} role="status">Ajoute une contrainte pour construire une séance adaptée.</p>}{formError && <div className={styles.errorNotice} id="goal-error" role="alert"><strong>Impossible de composer.</strong><span>{formError}</span><button onClick={() => { setGoal("10 minutes, débutant, sans saut"); setFormError(null); }} type="button">Reprendre l&apos;exemple</button></div>}{generation === "loading" && <div className={styles.loadingNotice} aria-live="polite"><span aria-hidden="true" /><div><strong>Composition en cours</strong><p>Nous structurons les phases, les tours et les durées.</p></div></div>}<button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Composition…" : "Composer la séance"}</button><button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Utiliser l&apos;exemple de secours</button></div></section>
   </main>;
 
   if (screen === "sessions") return <main className={styles.workspacePage}>
