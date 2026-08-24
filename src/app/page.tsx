@@ -269,7 +269,7 @@ export default function Home() {
     <header className={styles.workspaceHeader}><button className={styles.dashboardBrand} onClick={() => setScreen("catalog")} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Aujourd&apos;hui</button></header>
     <section className={styles.workspaceContent}><p className={styles.eyebrow}>COMPOSER AVEC L&apos;IA</p><h1>Une contrainte suffit.</h1><p className={styles.workspaceLead}>Décris le contexte : la séance sera structurée et lisible avant le départ.</p><div className={styles.composerWorkspace}><label htmlFor="workout-goal">Objectif<textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. 10 min, débutant, sans saut" rows={4} value={goal} /></label><p className={styles.fieldHint} id="goal-help">Durée, niveau et contrainte : une phrase suffit.</p><div className={styles.quickChips}><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">10 min</button><button onClick={() => setGoal("10 minutes, débutant")} type="button">Débutant</button><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">Sans saut</button></div>{!goal.trim() && !formError && <p className={styles.emptyNotice} role="status">Ajoute une contrainte pour construire une séance adaptée.</p>}{formError && <div className={styles.errorNotice} id="goal-error" role="alert"><strong>Impossible de composer.</strong><span>{formError}</span><button onClick={() => { setGoal("10 minutes, débutant, sans saut"); setFormError(null); }} type="button">Reprendre l&apos;exemple</button></div>}{generation === "loading" && <div className={styles.loadingNotice} aria-live="polite"><span aria-hidden="true" /><div><strong>Composition en cours</strong><p>Nous structurons les phases, les tours et les durées.</p></div></div>}<button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Composition…" : "Composer la séance"}</button><button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Utiliser l&apos;exemple de secours</button></div></section>
   </main>;
-  if (screen === "preview") {
+  if ((screen as Screen) === "preview") {
     return (
       <main className={styles.appShell}>
         <header className={styles.topBar}>
@@ -319,7 +319,7 @@ export default function Home() {
     );
   }
 
-  if (screen === "catalog") {
+  if ((screen as Screen) === "catalog") {
     return (
       <AppShell active="catalog" onNavigate={setScreen}>
         <header className={styles.dashboardHeader}>
@@ -352,7 +352,7 @@ export default function Home() {
     );
   }
 
-  if (screen === "composer") {
+  if ((screen as Screen) === "composer") {
     return (
       <AppShell active="composer" onNavigate={setScreen}>
         <p className={styles.eyebrow}>COMPOSER AVEC L&apos;IA</p>
