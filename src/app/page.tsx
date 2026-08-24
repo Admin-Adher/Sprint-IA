@@ -18,8 +18,15 @@ import styles from "./page.module.css";
 type Screen = "landing" | "catalog" | "composer" | "sessions" | "preview" | "player" | "complete";
 type GenerationState = "idle" | "loading" | "success" | "error" | "fallback";
 type PlayerState = "ready" | "countdown" | "running" | "paused";
+type ComposerLevel = "beginner" | "intermediate";
 
 const START_COUNTDOWN_SECONDS = 5;
+const COMPOSER_CONSTRAINTS = ["sans saut", "sans matériel", "petit espace"] as const;
+const COMPOSER_GOALS = [
+  "Cardio doux pour un groupe au parc",
+  "Créer de l’énergie sans épuiser le groupe",
+  "Renforcer tout le corps sans impact",
+] as const;
 
 const levelLabel = (level: WorkoutPlan["level"]) => (level === "beginner" ? "Débutant" : "Intermédiaire");
 
@@ -27,7 +34,10 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>("catalog");
   const [plan, setPlan] = useState<WorkoutPlan>(demoGeneratedPlan);
   const [generation, setGeneration] = useState<GenerationState>("idle");
-  const [goal, setGoal] = useState("10 minutes, débutant, sans saut");
+  const [durationMinutes, setDurationMinutes] = useState<4 | 10 | 20>(10);
+  const [composerLevel, setComposerLevel] = useState<ComposerLevel>("beginner");
+  const [constraints, setConstraints] = useState<string[]>(["sans saut"]);
+  const [goal, setGoal] = useState("Cardio doux pour un groupe au parc");
   const [formError, setFormError] = useState<string | null>(null);
   const [voiceAvailable, setVoiceAvailable] = useState(true);
   const [playerState, setPlayerState] = useState<PlayerState>("ready");
@@ -118,15 +128,31 @@ export default function Home() {
     setFormError(null);
     setGeneration("loading");
     window.setTimeout(() => {
+      const selectedFixture = durationMinutes === 4
+        ? catalogPlans[0]
+        : durationMinutes === 20
+          ? catalogPlans[2]
+          : demoGeneratedPlan;
       setPlan({
-        ...demoGeneratedPlan,
+        ...(fallback ? demoGeneratedPlan : selectedFixture),
+        id: fallback ? demoGeneratedPlan.id : `demo-${durationMinutes}-${composerLevel}`,
+        name: fallback ? demoGeneratedPlan.name : `Séance personnalisée · ${durationMinutes} min`,
+        level: fallback ? demoGeneratedPlan.level : composerLevel,
         fallbackNotice: fallback
           ? "Exemple de secours - IA indisponible. Le parcours reste lançable."
-          : "Mode démonstration local - API de génération à connecter.",
+          : "Plan préparé depuis tes choix — aperçu complet avant lancement.",
       });
       setGeneration(fallback ? "fallback" : "success");
       setScreen("preview");
     }, 680);
+  };
+
+  const toggleConstraint = (constraint: string) => {
+    setConstraints((current) => {
+      if (current.includes(constraint)) return current.filter((item) => item !== constraint);
+      if (current.length < 2) return [...current, constraint];
+      return [...current.slice(1), constraint];
+    });
   };
 
   const openPlan = (nextPlan: WorkoutPlan) => {
@@ -177,7 +203,10 @@ export default function Home() {
     setPlayerState("ready");
     setPlan(demoGeneratedPlan);
     setGeneration("idle");
-    setGoal("10 minutes, débutant, sans saut");
+    setDurationMinutes(10);
+    setComposerLevel("beginner");
+    setConstraints(["sans saut"]);
+    setGoal("Cardio doux pour un groupe au parc");
     setFormError(null);
     setScreen("catalog");
   };
@@ -265,10 +294,92 @@ export default function Home() {
     <nav className={styles.bottomMenu} aria-label="Navigation mobile"><button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>●</span> Aujourd&apos;hui</button><button onClick={() => setScreen("composer")} type="button"><span>＋</span> Composer</button><button onClick={() => setScreen("sessions")} type="button"><span>□</span> Séances</button></nav>
   </main>;
 
-  if (screen === "composer") return <main className={styles.workspacePage}>
-    <header className={styles.workspaceHeader}><button className={styles.dashboardBrand} onClick={() => setScreen("catalog")} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Aujourd&apos;hui</button></header>
-    <section className={styles.workspaceContent}><p className={styles.eyebrow}>COMPOSER AVEC L&apos;IA</p><h1>Une contrainte suffit.</h1><p className={styles.workspaceLead}>Décris le contexte : la séance sera structurée et lisible avant le départ.</p><div className={styles.composerWorkspace}><label htmlFor="workout-goal">Objectif<textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. 10 min, débutant, sans saut" rows={4} value={goal} /></label><p className={styles.fieldHint} id="goal-help">Durée, niveau et contrainte : une phrase suffit.</p><div className={styles.quickChips}><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">10 min</button><button onClick={() => setGoal("10 minutes, débutant")} type="button">Débutant</button><button onClick={() => setGoal("10 minutes, débutant, sans saut")} type="button">Sans saut</button></div>{!goal.trim() && !formError && <p className={styles.emptyNotice} role="status">Ajoute une contrainte pour construire une séance adaptée.</p>}{formError && <div className={styles.errorNotice} id="goal-error" role="alert"><strong>Impossible de composer.</strong><span>{formError}</span><button onClick={() => { setGoal("10 minutes, débutant, sans saut"); setFormError(null); }} type="button">Reprendre l&apos;exemple</button></div>}{generation === "loading" && <div className={styles.loadingNotice} aria-live="polite"><span aria-hidden="true" /><div><strong>Composition en cours</strong><p>Nous structurons les phases, les tours et les durées.</p></div></div>}<button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Composition…" : "Composer la séance"}</button><button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Utiliser l&apos;exemple de secours</button></div></section>
-  </main>;
+  if (screen === "composer") {
+    const selectedLevelLabel = composerLevel === "beginner" ? "Débutant" : "Intermédiaire";
+
+    return (
+      <AppShell active="composer" onNavigate={setScreen}>
+        <section className={styles.composerPage}>
+          <header className={styles.composerHeading}>
+            <div>
+              <p className={styles.eyebrow}>ÉTAPE 1 SUR 2 · PERSONNALISER</p>
+              <h1>La séance qui colle au terrain.</h1>
+              <p>Choisis l’essentiel. L’application transforme ensuite ces décisions en un plan complet à vérifier avant de le lancer.</p>
+            </div>
+            <div className={styles.funnelHint} aria-label="Tunnel de création">
+              <span aria-current="step">01 <b>Composer</b></span>
+              <i aria-hidden="true" />
+              <span>02 <b>Vérifier le plan</b></span>
+            </div>
+          </header>
+
+          <div className={styles.composerGrid}>
+            <div className={styles.choiceStack}>
+              <fieldset className={styles.choiceGroup}>
+                <legend><span>01</span> Combien de temps ?</legend>
+                <div className={styles.durationChoices}>
+                  {([
+                    { minutes: 4, label: "Express", detail: "Tabata net" },
+                    { minutes: 10, label: "Équilibre", detail: "Idéal en groupe" },
+                    { minutes: 20, label: "Complet", detail: "Échauffement inclus" },
+                  ] as const).map((item) => (
+                    <button aria-pressed={durationMinutes === item.minutes} className={durationMinutes === item.minutes ? styles.selectedChoice : undefined} key={item.minutes} onClick={() => setDurationMinutes(item.minutes)} type="button">
+                      <strong>{item.minutes}<small>min</small></strong>
+                      <span>{item.label}</span>
+                      <em>{item.detail}</em>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className={styles.choiceGroup}>
+                <legend><span>02</span> Pour quel niveau ?</legend>
+                <div className={styles.levelChoices}>
+                  <button aria-pressed={composerLevel === "beginner"} className={composerLevel === "beginner" ? styles.selectedChoice : undefined} onClick={() => setComposerLevel("beginner")} type="button"><strong>Débutant</strong><span>Accessible et très guidé</span></button>
+                  <button aria-pressed={composerLevel === "intermediate"} className={composerLevel === "intermediate" ? styles.selectedChoice : undefined} onClick={() => setComposerLevel("intermediate")} type="button"><strong>Intermédiaire</strong><span>Plus de cadence et d’intensité</span></button>
+                </div>
+              </fieldset>
+
+              <fieldset className={styles.choiceGroup}>
+                <legend><span>03</span> Quelles contraintes ? <small>2 maximum</small></legend>
+                <div className={styles.constraintChoices}>
+                  {COMPOSER_CONSTRAINTS.map((constraint) => (
+                    <button aria-pressed={constraints.includes(constraint)} className={constraints.includes(constraint) ? styles.selectedConstraint : undefined} key={constraint} onClick={() => toggleConstraint(constraint)} type="button">{constraint}</button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className={styles.choiceGroup}>
+                <legend><span>04</span> Quel objectif aujourd’hui ?</legend>
+                <div className={styles.goalChoices}>
+                  {COMPOSER_GOALS.map((item) => (
+                    <button aria-pressed={goal === item} className={goal === item ? styles.selectedGoal : undefined} key={item} onClick={() => { setGoal(item); setFormError(null); }} type="button">{item}</button>
+                  ))}
+                </div>
+                <label className={styles.customGoal} htmlFor="workout-goal">Ou précise ton contexte
+                  <textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. quinze personnes au parc, reprise douce…" rows={2} value={goal} />
+                </label>
+                <p className={styles.fieldHint} id="goal-help">Cette phrase sera transmise au générateur de Mathis avec tes choix.</p>
+              </fieldset>
+
+              {formError && <div className={styles.errorNotice} role="alert"><strong>Impossible de préparer le plan.</strong><span>{formError}</span><button onClick={() => { setGoal(COMPOSER_GOALS[0]); setFormError(null); }} type="button">Reprendre l’exemple</button></div>}
+            </div>
+
+            <aside className={styles.composerSummary} aria-live="polite">
+              <p>TA CONFIGURATION</p>
+              <strong>{durationMinutes}<small> min</small></strong>
+              <div className={styles.summaryTags}><span>{selectedLevelLabel}</span>{constraints.map((constraint) => <span key={constraint}>{constraint}</span>)}</div>
+              <h2>{goal || "Précise ton objectif"}</h2>
+              <p className={styles.summaryHint}>Prochaine étape : vérifier les exercices, les tours et chaque durée avant de lancer.</p>
+              {generation === "loading" && <div className={styles.loadingNotice}><span aria-hidden="true" /><div><strong>Création du plan</strong><p>Structure et durées en préparation.</p></div></div>}
+              <button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Création du plan…" : "Générer mon plan"}</button>
+              <button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Utiliser le plan de secours</button>
+            </aside>
+          </div>
+        </section>
+      </AppShell>
+    );
+  }
   if ((screen as Screen) === "preview") {
     return (
       <main className={styles.appShell}>
