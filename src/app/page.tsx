@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 
 import { AppShell } from "@/features/workout-demo/AppShell";
 import { catalogPlans, demoGeneratedPlan, flattenPlan, formatDuration } from "@/features/workout-demo/demo-plans";
+import { SessionPlanPage } from "@/features/workout-demo/SessionPlanPage";
 import {
   formatCompletedAt,
   getServerSessionHistory,
@@ -11,7 +12,15 @@ import {
   readSessionHistory,
   subscribeSessionHistory,
 } from "@/features/workout-demo/session-history";
-import type { WorkoutPlan } from "@/features/workout-demo/types";
+import {
+  START_COUNTDOWN_SECONDS,
+  completeScript,
+  countdownScript,
+  phaseScript,
+  upcomingScripts,
+} from "@/features/workout-demo/session-scripts";
+import { useSessionVoice } from "@/features/workout-demo/session-voice";
+import type { PhaseKind, WorkoutPlan } from "@/features/workout-demo/types";
 
 import styles from "./page.module.css";
 
@@ -20,7 +29,6 @@ type GenerationState = "idle" | "loading" | "success" | "error" | "fallback";
 type PlayerState = "ready" | "countdown" | "running" | "paused";
 type ComposerLevel = "beginner" | "intermediate";
 
-const START_COUNTDOWN_SECONDS = 5;
 const COMPOSER_CONSTRAINTS = ["sans saut", "silencieux", "petit espace"] as const;
 const COMPOSER_GOALS = [
   "Me remettre en mouvement en douceur",
@@ -29,6 +37,42 @@ const COMPOSER_GOALS = [
 ] as const;
 
 const levelLabel = (level: WorkoutPlan["level"]) => (level === "beginner" ? "Débutant" : "Intermédiaire");
+
+const playerSurfaceClass = (kind: PhaseKind, countdown: boolean) => {
+  if (countdown) return styles.playerCountdown;
+  switch (kind) {
+    case "work":
+      return styles.work;
+    case "rest":
+      return styles.recovery;
+    case "warmup":
+      return styles.playerWarmup;
+    case "cooldown":
+      return styles.playerCooldown;
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+};
+
+const phasePillLabel = (kind: PhaseKind, countdown: boolean) => {
+  if (countdown) return "DÉPART DANS";
+  switch (kind) {
+    case "work":
+      return "EFFORT";
+    case "rest":
+      return "RÉCUPÉRATION";
+    case "warmup":
+      return "ÉCHAUFFEMENT";
+    case "cooldown":
+      return "RETOUR AU CALME";
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+};
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("catalog");
@@ -39,7 +83,7 @@ export default function Home() {
   const [constraints, setConstraints] = useState<string[]>(["sans saut"]);
   const [goal, setGoal] = useState("Me remettre en mouvement en douceur");
   const [formError, setFormError] = useState<string | null>(null);
-  const [voiceAvailable, setVoiceAvailable] = useState(true);
+  const { available: voiceAvailable, usingFallback, speak, prefetch, stop: stopVoice } = useSessionVoice();
   const [playerState, setPlayerState] = useState<PlayerState>("ready");
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [remaining, setRemaining] = useState(START_COUNTDOWN_SECONDS);
@@ -55,16 +99,6 @@ export default function Home() {
   const phases = useMemo(() => flattenPlan(plan), [plan]);
   const phase = phases[phaseIndex] ?? phases[0];
   const nextPhase = phases[phaseIndex + 1];
-  const isWork = phase?.kind === "work";
-
-  const speak = useCallback((message: string) => {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = "fr-FR";
-    utterance.rate = 1.08;
-    window.speechSynthesis.speak(utterance);
-  }, []);
 
   const startPhase = useCallback((nextIndex: number, override?: number) => {
     const next = phases[nextIndex];
@@ -75,8 +109,11 @@ export default function Home() {
     endsAtRef.current = Date.now() + duration * 1000;
     setPlayerState("running");
     const upcoming = phases[nextIndex + 1];
-    speak(`${next.exercise}, ${next.durationSeconds} secondes.${next.kind === "rest" && upcoming ? ` Prochain : ${upcoming.exercise}.` : ""}`);
-  }, [phases, speak]);
+    if (override === undefined) {
+      speak(phaseScript(next, upcoming));
+      prefetch(upcomingScripts(plan, nextIndex + 1, 2));
+    }
+  }, [phases, plan, prefetch, speak]);
 
   const finishSession = useCallback(() => {
     const duration = startedAtRef.current
@@ -92,7 +129,7 @@ export default function Home() {
       plan,
     });
     setScreen("complete");
-    speak("Séance terminée. Bravo.");
+    speak(completeScript());
   }, [phases.length, plan, speak]);
 
   useEffect(() => {
@@ -161,8 +198,12 @@ export default function Home() {
     setScreen("preview");
   };
 
+  useEffect(() => {
+    if (screen !== "preview") return;
+    prefetch([countdownScript(plan), ...upcomingScripts(plan, 0, 2)]);
+  }, [plan, prefetch, screen]);
+
   const startSession = () => {
-    setVoiceAvailable("speechSynthesis" in window && typeof window.SpeechSynthesisUtterance !== "undefined");
     setPhaseIndex(0);
     setCompleted(0);
     setActualDuration(0);
@@ -172,7 +213,8 @@ export default function Home() {
     setRemaining(START_COUNTDOWN_SECONDS);
     setPlayerState("countdown");
     setScreen("player");
-    speak("Préparez-vous. La séance commence dans 5 secondes.");
+    speak(countdownScript(plan));
+    prefetch(upcomingScripts(plan, 0, 3));
   };
 
   const pause = () => {
@@ -182,7 +224,7 @@ export default function Home() {
     endsAtRef.current = null;
     pausedAtRef.current = Date.now();
     setPlayerState("paused");
-    window.speechSynthesis?.cancel();
+    stopVoice();
   };
 
   const resume = () => {
@@ -199,7 +241,7 @@ export default function Home() {
 
   const reset = () => {
     endsAtRef.current = null;
-    window.speechSynthesis?.cancel();
+    stopVoice();
     setPlayerState("ready");
     setPlan(demoGeneratedPlan);
     setGeneration("idle");
@@ -213,14 +255,14 @@ export default function Home() {
 
   const goToHub = () => {
     endsAtRef.current = null;
-    window.speechSynthesis?.cancel();
+    stopVoice();
     setPlayerState("ready");
     setScreen("sessions");
   };
 
   const stopSession = () => {
     endsAtRef.current = null;
-    window.speechSynthesis?.cancel();
+    stopVoice();
     setPlayerState("ready");
     setScreen("preview");
   };
@@ -229,19 +271,28 @@ export default function Home() {
     if (!phase) return null;
     const progress = Math.round((completed / phases.length) * 100);
     return (
-      <main className={`${styles.playerPage} ${isWork ? styles.work : styles.recovery}`}>
+      <main className={`${styles.playerPage} ${playerSurfaceClass(phase.kind, playerState === "countdown")}`}>
         <header className={styles.playerHeader}>
           <button onClick={stopSession} type="button">← Arrêter</button>
           <strong>{plan.name}</strong>
           <span>{formatDuration(plan.estimatedDurationSeconds)}</span>
         </header>
         <section aria-live="polite" className={styles.playerContent}>
-          <span className={styles.phasePill}>{playerState === "countdown" ? "DÉPART DANS" : isWork ? "EFFORT" : "RÉCUPÉRATION"}</span>
-          <p>{phase.blockLabel} · Tour {phase.round}/{phase.rounds}</p>
+          <span className={styles.phasePill}>{phasePillLabel(phase.kind, playerState === "countdown")}</span>
+          <p>{playerState === "countdown" ? "Pose le téléphone" : `${phase.blockLabel} · Tour ${phase.round}/${phase.rounds}`}</p>
           <div className={styles.timer}>{formatDuration(remaining)}</div>
-          <h1>{playerState === "countdown" ? "Pose ton téléphone" : phase.exercise}</h1>
-          <p className={styles.instruction}>{playerState === "countdown" ? "Le premier exercice sera annoncé à voix haute." : phase.instruction}</p>
-          <div className={styles.nextCard}><span>ENSUITE</span><strong>{nextPhase?.exercise ?? "Fin de séance"}</strong></div>
+          <h1>{playerState === "countdown" ? "Départ imminent" : phase.exercise}</h1>
+          <p className={styles.instruction}>
+            {playerState === "countdown" ? countdownScript(plan) : phase.instruction}
+          </p>
+          <div className={styles.nextCard}>
+            <span>ENSUITE</span>
+            <strong>
+              {playerState === "countdown"
+                ? (phase.kind === "warmup" ? phase.exercise : nextPhase?.exercise ?? "Fin de séance")
+                : (nextPhase?.exercise ?? "Fin de séance")}
+            </strong>
+          </div>
           <div className={styles.progressTrack}><span style={{ width: `${progress}%` }} /></div>
           <div className={styles.playerControls}>
             <button className={styles.circleButton} disabled={phaseIndex === 0 || playerState === "countdown"} onClick={() => move(-1)} type="button">‹</button>
@@ -270,11 +321,18 @@ export default function Home() {
     );
   }
 
-  if (screen === "preview") return <main className={styles.appShell}>
-    <header className={styles.topBar}><button className={styles.brandButton} onClick={reset} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.resetButton} onClick={reset} type="button">Réinitialiser la démo</button></header>
-    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen(generation === "idle" ? "catalog" : "composer")} type="button">{generation === "idle" ? "← Aujourd’hui" : "← Modifier mes choix"}</button><p className={styles.eyebrow}>{generation === "idle" ? "SÉANCE DU JOUR · VÉRIFIER LE PLAN" : "CRÉATION SUR MESURE · VÉRIFIER LE PLAN"}</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Plan vérifié : tu peux maintenant commencer ta séance."}</p>}</div><aside className={styles.launchPanel}><span>ÉTAPE SUIVANTE</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes, le temps de poser ton téléphone.</p><button className={styles.primaryButton} onClick={startSession} type="button">Commencer ma séance</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix te guide sans jamais ralentir le chrono."}</small></aside></section>
-    <section className={styles.structureSection}><div className={styles.sectionHeading}><span>STRUCTURE COMPLÈTE</span><p>La durée est calculée depuis les phases.</p></div>{plan.blocks.map((block) => <article className={styles.blockCard} key={block.id}><header><strong>{block.label}</strong><span>{block.rounds} {block.rounds > 1 ? "tours" : "tour"}</span></header>{block.phases.map((item) => <div className={styles.phaseRow} key={item.id}><span className={styles[item.kind]}>{item.kind === "work" ? "Effort" : item.kind === "rest" ? "Repos" : item.kind === "warmup" ? "Échauffement" : "Retour"}</span><strong>{item.exercise}</strong><em>{formatDuration(item.durationSeconds)}</em></div>)}</article>)}</section>
-  </main>;
+  if (screen === "preview") {
+    return (
+      <SessionPlanPage
+        generation={generation === "fallback" ? "fallback" : generation === "loading" ? "loading" : "idle"}
+        onBack={() => setScreen(generation === "idle" ? "sessions" : "composer")}
+        onLaunch={startSession}
+        plan={plan}
+        usingFallback={usingFallback}
+        voiceAvailable={voiceAvailable}
+      />
+    );
+  }
 
   if (screen === "catalog") return <main className={styles.dashboard}>
     <aside className={styles.sideMenu}>
@@ -289,7 +347,7 @@ export default function Home() {
     <section className={styles.dashboardContent}>
       <header className={styles.dashboardHeader}><div><p>DIMANCHE · 24 AOÛT</p><h1>Prêt à bouger aujourd&apos;hui ?</h1></div><button className={styles.profileButton} aria-label="Ton profil" type="button">J</button></header>
       <section className={styles.todayCard} aria-labelledby="today-heading"><div className={styles.todayEyebrow}><span>TA SÉANCE DU JOUR · DÉJÀ PRÊTE</span><strong>10:00</strong></div><div className={styles.todayMain}><div><p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p><h2 id="today-heading">Élan quotidien</h2><p>Tu ne veux pas réfléchir ? Adopte cette séance telle quelle, puis vérifie-la avant de commencer.</p></div><button className={styles.launchToday} onClick={() => { setPlan(catalogPlans[1]); setGeneration("idle"); setScreen("preview"); }} type="button">Choisir cette séance <span>→</span></button></div><div className={styles.todayPhases}><span>Marche active</span><i /><span>Squats</span><i /><span>Fentes</span><i /><span>Respiration</span></div></section>
-      <section className={styles.terrainBrief} aria-label="Repères avant la séance"><div className={styles.terrainIntro}><p>AVANT DE COMMENCER</p><strong>Tout est prêt.</strong></div><dl><div><dt>DÉPART</dt><dd>5 s</dd><small>pour poser ton téléphone</small></div><div><dt>RYTHME</dt><dd>18 phases</dd><small>effort et repos alternés</small></div><div><dt>GUIDAGE</dt><dd>À la voix</dd><small>reste concentré sur tes mouvements</small></div></dl></section>
+      <section className={styles.terrainBrief} aria-label="Repères avant la séance"><div className={styles.terrainIntro}><p>AVANT DE COMMENCER</p><strong>Tout est prêt.</strong></div><dl><div><dt>DÉPART</dt><dd>10 s</dd><small>pour poser ton téléphone</small></div><div><dt>RYTHME</dt><dd>18 phases</dd><small>effort et repos alternés</small></div><div><dt>GUIDAGE</dt><dd>À la voix</dd><small>reste concentré sur tes mouvements</small></div></dl></section>
     </section>
     <nav className={styles.bottomMenu} aria-label="Navigation mobile"><button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>●</span> Aujourd&apos;hui</button><button onClick={() => setScreen("composer")} type="button"><span>＋</span> Créer</button><button onClick={() => setScreen("sessions")} type="button"><span>□</span> Séances</button></nav>
   </main>;
