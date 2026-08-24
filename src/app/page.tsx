@@ -21,10 +21,10 @@ type PlayerState = "ready" | "countdown" | "running" | "paused";
 type ComposerLevel = "beginner" | "intermediate";
 
 const START_COUNTDOWN_SECONDS = 5;
-const COMPOSER_CONSTRAINTS = ["sans saut", "sans matériel", "petit espace"] as const;
+const COMPOSER_CONSTRAINTS = ["sans saut", "silencieux", "petit espace"] as const;
 const COMPOSER_GOALS = [
-  "Cardio doux pour un groupe au parc",
-  "Créer de l’énergie sans épuiser le groupe",
+  "Me remettre en mouvement en douceur",
+  "Me défouler et retrouver de l’énergie",
   "Renforcer tout le corps sans impact",
 ] as const;
 
@@ -37,7 +37,7 @@ export default function Home() {
   const [durationMinutes, setDurationMinutes] = useState<4 | 10 | 20>(10);
   const [composerLevel, setComposerLevel] = useState<ComposerLevel>("beginner");
   const [constraints, setConstraints] = useState<string[]>(["sans saut"]);
-  const [goal, setGoal] = useState("Cardio doux pour un groupe au parc");
+  const [goal, setGoal] = useState("Me remettre en mouvement en douceur");
   const [formError, setFormError] = useState<string | null>(null);
   const [voiceAvailable, setVoiceAvailable] = useState(true);
   const [playerState, setPlayerState] = useState<PlayerState>("ready");
@@ -206,7 +206,7 @@ export default function Home() {
     setDurationMinutes(10);
     setComposerLevel("beginner");
     setConstraints(["sans saut"]);
-    setGoal("Cardio doux pour un groupe au parc");
+    setGoal("Me remettre en mouvement en douceur");
     setFormError(null);
     setScreen("catalog");
   };
@@ -272,7 +272,7 @@ export default function Home() {
 
   if (screen === "preview") return <main className={styles.appShell}>
     <header className={styles.topBar}><button className={styles.brandButton} onClick={reset} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.resetButton} onClick={reset} type="button">Réinitialiser la démo</button></header>
-    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Catalogue</button><p className={styles.eyebrow}>PLAN DE DÉMONSTRATION</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Séance structurée prête à lancer — mode démo local."}</p>}</div><aside className={styles.launchPanel}><span>PRÊT À COACHER</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes. La voix annoncera chaque phase.</p><button className={styles.primaryButton} onClick={startSession} type="button">Lancer les mains libres</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix accompagne le chrono, elle ne le pilote jamais."}</small></aside></section>
+    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Aujourd&apos;hui</button><p className={styles.eyebrow}>TON PLAN PERSONNALISÉ</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Ta séance est structurée et prête à démarrer."}</p>}</div><aside className={styles.launchPanel}><span>PRÊT À BOUGER</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes, le temps de poser ton téléphone.</p><button className={styles.primaryButton} onClick={startSession} type="button">Commencer ma séance</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix te guide sans jamais ralentir le chrono."}</small></aside></section>
     <section className={styles.structureSection}><div className={styles.sectionHeading}><span>STRUCTURE COMPLÈTE</span><p>La durée est calculée depuis les phases.</p></div>{plan.blocks.map((block) => <article className={styles.blockCard} key={block.id}><header><strong>{block.label}</strong><span>{block.rounds} {block.rounds > 1 ? "tours" : "tour"}</span></header>{block.phases.map((item) => <div className={styles.phaseRow} key={item.id}><span className={styles[item.kind]}>{item.kind === "work" ? "Effort" : item.kind === "rest" ? "Repos" : item.kind === "warmup" ? "Échauffement" : "Retour"}</span><strong>{item.exercise}</strong><em>{formatDuration(item.durationSeconds)}</em></div>)}</article>)}</section>
   </main>;
 
@@ -284,12 +284,12 @@ export default function Home() {
         <button onClick={() => setScreen("composer")} type="button"><span>02</span> Composer</button>
         <button onClick={() => setScreen("sessions")} type="button"><span>03</span> Séances</button>
       </nav>
-      <div className={styles.sideNote}><span>MODE TERRAIN</span><p>Le chrono garde l&apos;heure réelle, même quand l&apos;écran n&apos;est plus devant toi.</p></div>
+      <div className={styles.sideNote}><span>MODE MAINS LIBRES</span><p>Le chrono et la voix te guident, même quand tu ne regardes plus l&apos;écran.</p></div>
     </aside>
     <section className={styles.dashboardContent}>
-      <header className={styles.dashboardHeader}><div><p>DIMANCHE · 24 AOÛT</p><h1>Prêt à coacher, Miguel ?</h1></div><button className={styles.profileButton} aria-label="Profil de Miguel" type="button">M</button></header>
-      <section className={styles.todayCard} aria-labelledby="today-heading"><div className={styles.todayEyebrow}><span>RECOMMANDÉE POUR MAINTENANT</span><strong>10:00</strong></div><div className={styles.todayMain}><div><p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p><h2 id="today-heading">Sprint Parc</h2><p>Un circuit doux, pensé pour échauffer le groupe sans interrompre le rythme.</p></div><button className={styles.launchToday} onClick={() => { setPlan(catalogPlans[1]); setGeneration("idle"); setScreen("preview"); }} type="button">Lancer <span>→</span></button></div><div className={styles.todayPhases}><span>Marche active</span><i /><span>Squats</span><i /><span>Fentes</span><i /><span>Respiration</span></div></section>
-      <section className={styles.terrainBrief} aria-label="Briefing terrain de la séance"><div className={styles.terrainIntro}><p>BRIEFING TERRAIN</p><strong>Tout est prêt.</strong></div><dl><div><dt>DÉPART</dt><dd>5 s</dd><small>pour poser le téléphone</small></div><div><dt>PARCOURS</dt><dd>18 phases</dd><small>mises en route incluses</small></div><div><dt>COACHING</dt><dd>À la voix</dd><small>consignes + prochain exercice</small></div></dl></section>
+      <header className={styles.dashboardHeader}><div><p>DIMANCHE · 24 AOÛT</p><h1>Prêt à bouger aujourd&apos;hui ?</h1></div><button className={styles.profileButton} aria-label="Ton profil" type="button">J</button></header>
+      <section className={styles.todayCard} aria-labelledby="today-heading"><div className={styles.todayEyebrow}><span>TA SÉANCE DU JOUR</span><strong>10:00</strong></div><div className={styles.todayMain}><div><p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p><h2 id="today-heading">Élan quotidien</h2><p>Une séance douce pour activer tout ton corps sans te mettre dans le rouge.</p></div><button className={styles.launchToday} onClick={() => { setPlan(catalogPlans[1]); setGeneration("idle"); setScreen("preview"); }} type="button">Voir le plan <span>→</span></button></div><div className={styles.todayPhases}><span>Marche active</span><i /><span>Squats</span><i /><span>Fentes</span><i /><span>Respiration</span></div></section>
+      <section className={styles.terrainBrief} aria-label="Repères avant la séance"><div className={styles.terrainIntro}><p>AVANT DE COMMENCER</p><strong>Tout est prêt.</strong></div><dl><div><dt>DÉPART</dt><dd>5 s</dd><small>pour poser ton téléphone</small></div><div><dt>RYTHME</dt><dd>18 phases</dd><small>effort et repos alternés</small></div><div><dt>GUIDAGE</dt><dd>À la voix</dd><small>reste concentré sur tes mouvements</small></div></dl></section>
     </section>
     <nav className={styles.bottomMenu} aria-label="Navigation mobile"><button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>●</span> Aujourd&apos;hui</button><button onClick={() => setScreen("composer")} type="button"><span>＋</span> Composer</button><button onClick={() => setScreen("sessions")} type="button"><span>□</span> Séances</button></nav>
   </main>;
@@ -303,8 +303,8 @@ export default function Home() {
           <header className={styles.composerHeading}>
             <div>
               <p className={styles.eyebrow}>ÉTAPE 1 SUR 2 · PERSONNALISER</p>
-              <h1>La séance qui colle au terrain.</h1>
-              <p>Choisis l’essentiel. L’application transforme ensuite ces décisions en un plan complet à vérifier avant de le lancer.</p>
+              <h1>Ta séance, selon ton moment.</h1>
+              <p>Choisis ton temps, ton niveau et ce dont tu as besoin aujourd’hui. L’application prépare ensuite un plan complet à vérifier avant de démarrer.</p>
             </div>
             <div className={styles.funnelHint} aria-label="Tunnel de création">
               <span aria-current="step">01 <b>Composer</b></span>
@@ -320,7 +320,7 @@ export default function Home() {
                 <div className={styles.durationChoices}>
                   {([
                     { minutes: 4, label: "Express", detail: "Tabata net" },
-                    { minutes: 10, label: "Équilibre", detail: "Idéal en groupe" },
+                    { minutes: 10, label: "Équilibre", detail: "Facile à caser" },
                     { minutes: 20, label: "Complet", detail: "Échauffement inclus" },
                   ] as const).map((item) => (
                     <button aria-pressed={durationMinutes === item.minutes} className={durationMinutes === item.minutes ? styles.selectedChoice : undefined} key={item.minutes} onClick={() => setDurationMinutes(item.minutes)} type="button">
@@ -357,9 +357,9 @@ export default function Home() {
                   ))}
                 </div>
                 <label className={styles.customGoal} htmlFor="workout-goal">Ou précise ton contexte
-                  <textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. quinze personnes au parc, reprise douce…" rows={2} value={goal} />
+                  <textarea aria-describedby="goal-help" id="workout-goal" onChange={(event) => { setGoal(event.target.value); if (formError) setFormError(null); }} placeholder="Ex. après le travail, reprise douce, appartement…" rows={2} value={goal} />
                 </label>
-                <p className={styles.fieldHint} id="goal-help">Cette phrase sera transmise au générateur de Mathis avec tes choix.</p>
+                <p className={styles.fieldHint} id="goal-help">Ton contexte précise l’intention et l’intensité de ta séance.</p>
               </fieldset>
 
               {formError && <div className={styles.errorNotice} role="alert"><strong>Impossible de préparer le plan.</strong><span>{formError}</span><button onClick={() => { setGoal(COMPOSER_GOALS[0]); setFormError(null); }} type="button">Reprendre l’exemple</button></div>}
@@ -390,7 +390,7 @@ export default function Home() {
         <section className={styles.previewLayout}>
           <div className={styles.previewIntro}>
             <button className={styles.backButton} onClick={goToHub} type="button">← Séances</button>
-            <p className={styles.eyebrow}>PLAN DE DÉMONSTRATION</p>
+            <p className={styles.eyebrow}>TON PLAN PERSONNALISÉ</p>
             <h1>{plan.name}</h1>
             <p>{levelLabel(plan.level)} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>
             {plan.fallbackNotice && (
@@ -398,11 +398,11 @@ export default function Home() {
             )}
           </div>
           <aside className={styles.launchPanel}>
-            <span>PRÊT À COACHER</span>
+            <span>PRÊT À BOUGER</span>
             <strong>{formatDuration(plan.estimatedDurationSeconds)}</strong>
-            <p>Départ dans 5 secondes. La voix annoncera chaque phase.</p>
-            <button className={styles.primaryButton} onClick={startSession} type="button">Lancer les mains libres</button>
-            <small>La voix accompagne le chrono, elle ne le pilote jamais.</small>
+            <p>Départ dans 5 secondes, le temps de poser ton téléphone.</p>
+            <button className={styles.primaryButton} onClick={startSession} type="button">Commencer ma séance</button>
+            <small>La voix te guide sans jamais ralentir le chrono.</small>
           </aside>
         </section>
         <section className={styles.structureSection}>
@@ -436,9 +436,9 @@ export default function Home() {
         <header className={styles.dashboardHeader}>
           <div>
             <p>DIMANCHE · 24 AOÛT</p>
-            <h1>Prêt à coacher, Miguel ?</h1>
+            <h1>Prêt à bouger aujourd&apos;hui ?</h1>
           </div>
-          <button aria-label="Profil de Miguel" className={styles.profileButton} type="button">M</button>
+          <button aria-label="Ton profil" className={styles.profileButton} type="button">J</button>
         </header>
         <section aria-labelledby="today-heading" className={styles.todayCard}>
           <div className={styles.todayEyebrow}>
@@ -448,8 +448,8 @@ export default function Home() {
           <div className={styles.todayMain}>
             <div>
               <p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p>
-              <h2 id="today-heading">Sprint Parc</h2>
-              <p>Un circuit doux, pensé pour échauffer le groupe sans interrompre le rythme.</p>
+              <h2 id="today-heading">Élan quotidien</h2>
+              <p>Une séance douce pour activer tout ton corps sans te mettre dans le rouge.</p>
             </div>
             <button className={styles.launchToday} onClick={() => setScreen("sessions")} type="button">
               Lancer <span>→</span>
@@ -549,20 +549,20 @@ export default function Home() {
         </header>
         <section className={styles.landingHero}>
           <div className={styles.landingCopy}>
-            <p className={styles.eyebrow}>LE COACH NE REGARDE PAS SON TÉLÉPHONE</p>
-            <h1>Le HIIT qui <em>coach</em> à ta place.</h1>
-            <p>Compose une séance structurée, pose le téléphone au sol et laisse une voix claire guider chaque effort. Toi, tu regardes ton groupe.</p>
+            <p className={styles.eyebrow}>TA SÉANCE S’ADAPTE À TA JOURNÉE</p>
+            <h1>Le HIIT qui te <em>guide</em> vraiment.</h1>
+            <p>Choisis le temps dont tu disposes, pose le téléphone et laisse une voix claire guider chaque effort. Tu n’as plus qu’à bouger.</p>
             <div className={styles.heroActions}>
               <button className={styles.landingPrimary} onClick={() => setScreen("sessions")} type="button">Composer une séance <span>→</span></button>
               <button className={styles.landingTextButton} onClick={() => openPlan(catalogPlans[0])} type="button">Lancer une Tabata 4 min</button>
             </div>
             <div className={styles.heroProof}>
               <span>01</span>
-              <p>Une séance annoncée à 4 min dure 4 min.<br /><strong>Précision pensée pour le terrain.</strong></p>
+              <p>Une séance annoncée à 4 min dure 4 min.<br /><strong>Précision pensée pour ton quotidien.</strong></p>
             </div>
           </div>
           <div aria-label="Aperçu du lecteur de séance" className={styles.coachPanel}>
-            <div className={styles.coachPanelTop}><span>EN DIRECT</span><strong>SPRINT PARC</strong><i>10:00</i></div>
+            <div className={styles.coachPanelTop}><span>EN DIRECT</span><strong>ÉLAN QUOTIDIEN</strong><i>10:00</i></div>
             <div className={styles.coachTimer}>00:45</div>
             <div className={styles.coachExercise}><span>EFFORT · TOUR 2/4</span><strong>Squats contrôlés</strong><p>Hanches en arrière, genoux dans l&apos;axe.</p></div>
             <div className={styles.coachNext}><span>ENSUITE</span><strong>Fentes arrière</strong></div>
@@ -570,7 +570,7 @@ export default function Home() {
           </div>
         </section>
         <section className={styles.reasonSection} id="pourquoi">
-          <p className={styles.eyebrow}>UN OUTIL POUR LE VRAI TERRAIN</p>
+          <p className={styles.eyebrow}>UN OUTIL POUR LES VRAIES JOURNÉES</p>
           <div className={styles.reasonGrid}>
             <h2>À bout de souffle, personne ne devrait devoir déchiffrer une interface.</h2>
             <div>
@@ -584,12 +584,12 @@ export default function Home() {
           <div className={styles.ritualGrid}>
             <article><span>01</span><h3>Décris ton contexte</h3><p>Durée, niveau, contrainte : « 10 min, sans saut » suffit.</p></article>
             <article><span>02</span><h3>Lis avant d&apos;agir</h3><p>Chaque tour, phase et durée restent visibles avant le départ.</p></article>
-            <article><span>03</span><h3>Coach sans écran</h3><p>Le téléphone guide le groupe pendant que toi, tu restes présent.</p></article>
+            <article><span>03</span><h3>Bouge sans écran</h3><p>Le téléphone te guide pendant que tu restes concentré sur ton mouvement.</p></article>
           </div>
         </section>
         <section className={styles.landingFinal}>
           <div>
-            <p className={styles.eyebrow}>PRÊT POUR LE PARC</p>
+            <p className={styles.eyebrow}>PRÊT POUR AUJOURD’HUI</p>
             <h2>La prochaine séance commence en un clic.</h2>
           </div>
           <button className={styles.landingPrimary} onClick={() => setScreen("sessions")} type="button">Choisir une séance <span>→</span></button>

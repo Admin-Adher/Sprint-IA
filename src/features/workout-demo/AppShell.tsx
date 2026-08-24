@@ -36,8 +36,8 @@ export function AppShell({ active, onNavigate, children }: AppShellProps) {
           Démarrer
         </button>
         <div className={styles.sideNote}>
-          <span>MODE TERRAIN</span>
-          <p>Le chrono garde l&apos;heure réelle, même quand l&apos;écran n&apos;est plus devant toi.</p>
+          <span>MODE MAINS LIBRES</span>
+          <p>Le chrono et la voix te guident, même quand tu ne regardes plus l&apos;écran.</p>
         </div>
       </aside>
       <section className={isHome ? styles.dashboardContent : styles.hubContent}>{children}</section>

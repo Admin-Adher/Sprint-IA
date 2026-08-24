@@ -10,10 +10,10 @@
 
 ## 1. Produit en une phrase
 
-Pour Miguel, coach qui doit diriger son groupe sans regarder son téléphone,
-**Just Do HIIT** transforme une contrainte courte (durée, niveau, sans saut)
-en une séance HIIT structurée et lançable à la voix, afin qu'il puisse coacher
-plutôt que compter.
+Pour toute personne qui veut bouger régulièrement sans passer du temps à
+préparer ou surveiller son entraînement, **Just Do HIIT** transforme quelques
+choix simples (durée, niveau, contraintes et objectif du jour) en une séance
+structurée et guidée à la voix.
 
 ## 2. Promesse de démonstration
 
@@ -23,25 +23,27 @@ faire et ce qui arrive ensuite.
 
 ## 3. Utilisateur et contexte
 
-- Utilisateur principal : Miguel, coach de plein air pour un groupe de quinze
-  personnes.
-- Situation : téléphone posé au sol, à deux mètres, pendant une séance intense.
-- Friction : il surveille le chrono au lieu de corriger les postures.
-- Utile quand : il lance une séance fiable, comprend la suite sans regarder
-  l'écran et peut réutiliser un plan adapté.
+- Utilisateur principal : une personne qui veut s'entraîner seule, chez elle ou
+  dehors, sans matériel et sans installer une application complexe.
+- Situation : le téléphone est posé au sol ou sur un meuble pendant l'effort.
+- Friction : elle perd du temps à choisir une séance, puis doit surveiller le
+  chrono alors qu'elle devrait rester concentrée sur ses mouvements.
+- Utile quand : elle dispose de 4, 10 ou 20 minutes, choisit son niveau et ses
+  contraintes, puis suit une séance fiable sans regarder constamment l'écran.
 
 ## 4. Golden path
 
-1. Miguel arrive sur le catalogue et charge l'exemple « 10 min, débutant, sans
-   saut ».
-2. Il demande à l'IA de composer la séance, ou choisit l'une des trois séances
+1. L'utilisateur arrive sur l'accueil et découvre une séance recommandée pour
+   aujourd'hui.
+2. Il demande à l'IA de composer sa séance à partir de son temps, de son niveau,
+   de ses contraintes et de son objectif, ou choisit l'une des trois séances
    prêtes à lancer.
 3. L'application affiche le plan complet : exercices, phases, tours et durée
    calculée.
-4. Il appuie sur **Lancer les mains libres** ; un décompte de départ le laisse
+4. Il appuie sur **Commencer ma séance** ; un décompte de départ le laisse
    poser le téléphone.
 5. Le lecteur annonce les phases, affiche un compte à rebours géant et le
-   prochain exercice ; Miguel peut mettre en pause, reprendre, avancer,
+   prochain exercice ; il peut mettre en pause, reprendre, avancer,
    revenir ou arrêter.
 6. L'écran final affiche la durée réelle et les phases accomplies, avec Relancer
    et Retour au catalogue.
@@ -116,7 +118,7 @@ Exemple de démo :
   "durationMinutes": 10,
   "level": "beginner",
   "constraints": ["sans saut"],
-  "goal": "Faire une séance cardio douce dans un parc",
+  "goal": "Me remettre en mouvement en douceur après le travail",
   "locale": "fr-FR"
 }
 ```
@@ -162,7 +164,7 @@ somme réelle des phases et tours.
 - Règles : pas de durée nulle, pas d'exercice à impact si « sans saut », une
   consigne courte par phase, durée totale cohérente.
 - Timeout/erreur : réponse d'erreur lisible et bouton Reessayer.
-- Fallback : le serveur renvoie le plan fixture « Sprint Parc - 10 min sans
+- Fallback : le serveur renvoie le plan fixture « Élan quotidien - 10 min sans
   saut », avec `source: "fixture"` et un message explicite indiquant que l'IA
   est indisponible.
 - Horloge : hors pause, le lecteur suit `Date.now()`. Au retour d'un onglet en
@@ -171,7 +173,7 @@ somme réelle des phases et tours.
 
 ## 9. Moment waouh
 
-Après une demande très courte, Miguel pose son téléphone. Le lecteur annonce
+Après quelques choix simples, l'utilisateur pose son téléphone. Le lecteur annonce
 « Squats contrôlés, 30 secondes », affiche un chiffre énorme, puis pendant le
 repos annonce « Prochain : fentes arrière » avant qu'il ait besoin de regarder.
 
@@ -201,9 +203,9 @@ repos annonce « Prochain : fentes arrière » avant qu'il ait besoin de regarde
 
 ## 12. Pitch en 3 phrases
 
-- Problème : un coach qui doit surveiller son téléphone ne peut pas surveiller
-  son groupe.
-- Solution : Just Do HIIT transforme une contrainte simple en séance structurée,
-  puis la mène à la voix avec un chrono fiable.
+- Problème : une personne qui doit chercher une séance puis surveiller son
+  téléphone perd du temps et sort de son effort.
+- Solution : Just Do HIIT transforme son temps disponible et son état du jour
+  en séance structurée, puis la guide à la voix avec un chrono fiable.
 - Différence : ce n'est pas un chatbot ni un minuteur statique : la séance est
   composée, visible avant le départ et réellement pilotée les mains libres.

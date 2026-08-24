@@ -21,7 +21,7 @@ export const catalogPlans: WorkoutPlan[] = [
       { id: "recover", kind: "rest", exercise: "Repos", instruction: "Respire, le prochain tour arrive vite.", durationSeconds: 10 },
     ],
   }]),
-  plan("gentle-10", "Sprint Parc", "beginner", [
+  plan("gentle-10", "Élan quotidien", "beginner", [
     { id: "warmup", label: "Mise en route", rounds: 1, phases: [{ id: "march", kind: "warmup", exercise: "Marche active", instruction: "Bras souples, souffle calme, prépare les jambes.", durationSeconds: 60 }] },
     { id: "circuit", label: "Circuit sans saut", rounds: 4, phases: [
       { id: "squat", kind: "work", exercise: "Squats contrôlés", instruction: "Hanches en arrière, genoux dans l'axe.", durationSeconds: 45 },
@@ -31,7 +31,7 @@ export const catalogPlans: WorkoutPlan[] = [
     ] },
     { id: "cooldown", label: "Retour au calme", rounds: 1, phases: [{ id: "breath", kind: "cooldown", exercise: "Respiration", instruction: "Marche doucement et retrouve un souffle long.", durationSeconds: 60 }] },
   ]),
-  plan("coach-20", "Endurance du coach", "intermediate", [
+  plan("endurance-20", "Endurance active", "intermediate", [
     { id: "warmup-long", label: "Échauffement", rounds: 1, phases: [{ id: "mobilize", kind: "warmup", exercise: "Mobilisation", instruction: "Déroule les épaules et active les chevilles.", durationSeconds: 120 }] },
     { id: "endurance", label: "Bloc cardio", rounds: 9, phases: [
       { id: "step", kind: "work", exercise: "Montées de genoux", instruction: "Cadence continue, garde ton buste grand.", durationSeconds: 45 },
@@ -44,8 +44,8 @@ export const catalogPlans: WorkoutPlan[] = [
 
 export const demoGeneratedPlan: WorkoutPlan = {
   ...catalogPlans[1],
-  id: "ai-sprint-parc",
-  name: "Sprint Parc - 10 min sans saut",
+  id: "ai-daily-flow",
+  name: "Élan quotidien - 10 min sans saut",
   fallbackNotice: "Mode démonstration local - API de génération à connecter.",
 };
 
