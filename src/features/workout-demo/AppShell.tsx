@@ -26,7 +26,7 @@ export function AppShell({ active, onNavigate, children }: AppShellProps) {
             <span>01</span> Aujourd&apos;hui
           </button>
           <button className={active === "composer" ? styles.activeNav : undefined} onClick={() => onNavigate("composer")} type="button">
-            <span>02</span> Composer
+            <span>02</span> Créer
           </button>
           <button className={active === "sessions" ? styles.activeNav : undefined} onClick={() => onNavigate("sessions")} type="button">
             <span>03</span> Séances
@@ -46,7 +46,7 @@ export function AppShell({ active, onNavigate, children }: AppShellProps) {
           <span>●</span> Aujourd&apos;hui
         </button>
         <button className={active === "composer" ? styles.activeNav : undefined} onClick={() => onNavigate("composer")} type="button">
-          <span>＋</span> Composer
+          <span>＋</span> Créer
         </button>
         <button className={active === "sessions" ? styles.activeNav : undefined} onClick={() => onNavigate("sessions")} type="button">
           <span>□</span> Séances

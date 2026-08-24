@@ -272,7 +272,7 @@ export default function Home() {
 
   if (screen === "preview") return <main className={styles.appShell}>
     <header className={styles.topBar}><button className={styles.brandButton} onClick={reset} type="button"><span>JH</span> Just Do HIIT</button><button className={styles.resetButton} onClick={reset} type="button">Réinitialiser la démo</button></header>
-    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen("catalog")} type="button">← Aujourd&apos;hui</button><p className={styles.eyebrow}>TON PLAN PERSONNALISÉ</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Ta séance est structurée et prête à démarrer."}</p>}</div><aside className={styles.launchPanel}><span>PRÊT À BOUGER</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes, le temps de poser ton téléphone.</p><button className={styles.primaryButton} onClick={startSession} type="button">Commencer ma séance</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix te guide sans jamais ralentir le chrono."}</small></aside></section>
+    <section className={styles.previewLayout}><div className={styles.previewIntro}><button className={styles.backButton} onClick={() => setScreen(generation === "idle" ? "catalog" : "composer")} type="button">{generation === "idle" ? "← Aujourd’hui" : "← Modifier mes choix"}</button><p className={styles.eyebrow}>{generation === "idle" ? "SÉANCE DU JOUR · VÉRIFIER LE PLAN" : "CRÉATION SUR MESURE · VÉRIFIER LE PLAN"}</p><h1>{plan.name}</h1><p>{plan.level === "beginner" ? "Débutant" : "Intermédiaire"} · {formatDuration(plan.estimatedDurationSeconds)} · sans matériel</p>{plan.fallbackNotice && <p className={generation === "fallback" ? styles.fallbackNotice : styles.successNotice} role="status">{generation === "fallback" ? plan.fallbackNotice : "Plan vérifié : tu peux maintenant commencer ta séance."}</p>}</div><aside className={styles.launchPanel}><span>ÉTAPE SUIVANTE</span><strong>{formatDuration(plan.estimatedDurationSeconds)}</strong><p>Départ dans 5 secondes, le temps de poser ton téléphone.</p><button className={styles.primaryButton} onClick={startSession} type="button">Commencer ma séance</button><small>{voiceAvailable === false ? "Voix indisponible : le chrono continuera sans annonce." : "La voix te guide sans jamais ralentir le chrono."}</small></aside></section>
     <section className={styles.structureSection}><div className={styles.sectionHeading}><span>STRUCTURE COMPLÈTE</span><p>La durée est calculée depuis les phases.</p></div>{plan.blocks.map((block) => <article className={styles.blockCard} key={block.id}><header><strong>{block.label}</strong><span>{block.rounds} {block.rounds > 1 ? "tours" : "tour"}</span></header>{block.phases.map((item) => <div className={styles.phaseRow} key={item.id}><span className={styles[item.kind]}>{item.kind === "work" ? "Effort" : item.kind === "rest" ? "Repos" : item.kind === "warmup" ? "Échauffement" : "Retour"}</span><strong>{item.exercise}</strong><em>{formatDuration(item.durationSeconds)}</em></div>)}</article>)}</section>
   </main>;
 
@@ -281,17 +281,17 @@ export default function Home() {
       <button className={styles.dashboardBrand} onClick={() => setScreen("catalog")} type="button"><span>JH</span> Just Do HIIT</button>
       <nav aria-label="Menu de l'application" className={styles.sideNav}>
         <button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>01</span> Aujourd&apos;hui</button>
-        <button onClick={() => setScreen("composer")} type="button"><span>02</span> Composer</button>
+        <button onClick={() => setScreen("composer")} type="button"><span>02</span> Créer</button>
         <button onClick={() => setScreen("sessions")} type="button"><span>03</span> Séances</button>
       </nav>
       <div className={styles.sideNote}><span>MODE MAINS LIBRES</span><p>Le chrono et la voix te guident, même quand tu ne regardes plus l&apos;écran.</p></div>
     </aside>
     <section className={styles.dashboardContent}>
       <header className={styles.dashboardHeader}><div><p>DIMANCHE · 24 AOÛT</p><h1>Prêt à bouger aujourd&apos;hui ?</h1></div><button className={styles.profileButton} aria-label="Ton profil" type="button">J</button></header>
-      <section className={styles.todayCard} aria-labelledby="today-heading"><div className={styles.todayEyebrow}><span>TA SÉANCE DU JOUR</span><strong>10:00</strong></div><div className={styles.todayMain}><div><p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p><h2 id="today-heading">Élan quotidien</h2><p>Une séance douce pour activer tout ton corps sans te mettre dans le rouge.</p></div><button className={styles.launchToday} onClick={() => { setPlan(catalogPlans[1]); setGeneration("idle"); setScreen("preview"); }} type="button">Voir le plan <span>→</span></button></div><div className={styles.todayPhases}><span>Marche active</span><i /><span>Squats</span><i /><span>Fentes</span><i /><span>Respiration</span></div></section>
+      <section className={styles.todayCard} aria-labelledby="today-heading"><div className={styles.todayEyebrow}><span>TA SÉANCE DU JOUR · DÉJÀ PRÊTE</span><strong>10:00</strong></div><div className={styles.todayMain}><div><p className={styles.eyebrow}>SANS SAUT · DÉBUTANT</p><h2 id="today-heading">Élan quotidien</h2><p>Tu ne veux pas réfléchir ? Adopte cette séance telle quelle, puis vérifie-la avant de commencer.</p></div><button className={styles.launchToday} onClick={() => { setPlan(catalogPlans[1]); setGeneration("idle"); setScreen("preview"); }} type="button">Choisir cette séance <span>→</span></button></div><div className={styles.todayPhases}><span>Marche active</span><i /><span>Squats</span><i /><span>Fentes</span><i /><span>Respiration</span></div></section>
       <section className={styles.terrainBrief} aria-label="Repères avant la séance"><div className={styles.terrainIntro}><p>AVANT DE COMMENCER</p><strong>Tout est prêt.</strong></div><dl><div><dt>DÉPART</dt><dd>5 s</dd><small>pour poser ton téléphone</small></div><div><dt>RYTHME</dt><dd>18 phases</dd><small>effort et repos alternés</small></div><div><dt>GUIDAGE</dt><dd>À la voix</dd><small>reste concentré sur tes mouvements</small></div></dl></section>
     </section>
-    <nav className={styles.bottomMenu} aria-label="Navigation mobile"><button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>●</span> Aujourd&apos;hui</button><button onClick={() => setScreen("composer")} type="button"><span>＋</span> Composer</button><button onClick={() => setScreen("sessions")} type="button"><span>□</span> Séances</button></nav>
+    <nav className={styles.bottomMenu} aria-label="Navigation mobile"><button className={styles.activeNav} onClick={() => setScreen("catalog")} type="button"><span>●</span> Aujourd&apos;hui</button><button onClick={() => setScreen("composer")} type="button"><span>＋</span> Créer</button><button onClick={() => setScreen("sessions")} type="button"><span>□</span> Séances</button></nav>
   </main>;
 
   if (screen === "composer") {
@@ -307,7 +307,7 @@ export default function Home() {
               <p>Choisis ton temps, ton niveau et ce dont tu as besoin aujourd’hui. L’application prépare ensuite un plan complet à vérifier avant de démarrer.</p>
             </div>
             <div className={styles.funnelHint} aria-label="Tunnel de création">
-              <span aria-current="step">01 <b>Composer</b></span>
+              <span aria-current="step">01 <b>Créer</b></span>
               <i aria-hidden="true" />
               <span>02 <b>Vérifier le plan</b></span>
             </div>
@@ -372,7 +372,7 @@ export default function Home() {
               <h2>{goal || "Précise ton objectif"}</h2>
               <p className={styles.summaryHint}>Prochaine étape : vérifier les exercices, les tours et chaque durée avant de lancer.</p>
               {generation === "loading" && <div className={styles.loadingNotice}><span aria-hidden="true" /><div><strong>Création du plan</strong><p>Structure et durées en préparation.</p></div></div>}
-              <button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Création du plan…" : "Générer mon plan"}</button>
+              <button className={styles.primaryButton} disabled={generation === "loading"} onClick={() => generatePlan()} type="button">{generation === "loading" ? "Création de ta séance…" : "Créer ma séance sur mesure"}</button>
               <button className={styles.demoFailure} onClick={() => generatePlan(true)} type="button">Utiliser le plan de secours</button>
             </aside>
           </div>
